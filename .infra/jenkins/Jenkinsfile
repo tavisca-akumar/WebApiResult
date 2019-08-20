@@ -1,0 +1,77 @@
+pipeline {
+	agent any
+
+	parameters{
+		
+		string(name: 'Github_Username', defaultValue:'tavisca-akumar')
+
+		string (name: 'Branch_name' , defaultValue: 'build_job')
+
+	    string(name: 'Repositery_name', defaultValue: 'WebApiJenkins')
+
+		string (name: 'Solution_file',defaultValue: 'WebApplication1')
+
+		
+
+		
+
+		string (name: 'Docker_Image', defaultValue: 'webapp')
+
+		
+		
+	}
+
+	stages{	 
+	
+		
+		stage('clone'){
+			steps{				
+			    git branch: '${Branch_name}', url: 'https://github.com/${Github_Username}/${Repositery_name}.git'
+			  }
+		}
+
+		stage('build'){
+			steps{
+				  bat 'dotnet build %Solution_file%.sln -p:Configuration=release -v:q'
+				  powershell 'dotnet "C:/Users/akumar/Downloads/sonar-scanner-msbuild-4.6.2.2108-netcoreapp2.0/SonarScanner.MSBuild.dll" begin /k:"Ankit22197" /d:sonar.host.url="http://localhost:9000" /d:sonar.login="bf73458e8e14625c68e0d8267426dbcaf85e1bf3" '
+                  powershell 'dotnet build %Solution_file%.sln'   
+                  powershell 'dotnet "C:/Users/akumar/Downloads/sonar-scanner-msbuild-4.6.2.2108-netcoreapp2.0/SonarScanner.MSBuild.dll" end /d:sonar.login="bf73458e8e14625c68e0d8267426dbcaf85e1bf3" '
+
+			     }
+		 }
+
+		stage('Test'){
+			steps{
+				bat 'dotnet test %Solution_file%.sln'
+
+			}
+		}
+		stage('publish'){
+			steps{
+				bat 'dotnet publish %Solution_file%.sln' 
+			}
+		}
+		stage('Docker_build'){
+			steps{
+		         bat "docker build -t ${Docker_Image} -f Dockerfile ."
+			}
+		}
+		
+		stage('Docker_Publish'){
+			steps{
+			script{
+                 docker.withRegistry('https://index.docker.io/v1/','docker-hub-credentials'){
+                    withCredentials([usernamePassword(credentialsId: 'docker-hub-credentials', passwordVariable: 'pass', usernameVariable: 'user')]) {
+                      bat "docker tag ${Docker_Image} ${user}/${Docker_Image}"
+                      bat "docker push ${user}/${Docker_Image}"
+ 
+                     }
+ 
+                   }
+               }
+			}
+		
+        }
+		
+	}
+}
