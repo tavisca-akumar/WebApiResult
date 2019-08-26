@@ -5,9 +5,9 @@ pipeline {
 		
 		string(name: 'Github_Username', defaultValue:'tavisca-akumar')
 
-		string (name: 'Branch_name' , defaultValue: 'build_job')
+		string (name: 'Branch_name' , defaultValue: 'Develop')
 
-	    string(name: 'Repositery_name', defaultValue: 'WebApiJenkins')
+	    string(name: 'Repositery_name', defaultValue: 'WebApiResult')
 
 		string (name: 'Solution_file',defaultValue: 'WebApplication1')
 
